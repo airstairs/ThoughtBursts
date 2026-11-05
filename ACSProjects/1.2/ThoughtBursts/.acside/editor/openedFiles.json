@@ -1,0 +1,20 @@
+{
+  "allFiles": [
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/ThoughtBursts/app/src/main/assets/index.html",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 21793,
+          "line": 671
+        },
+        "start": {
+          "column": 0,
+          "index": 21793,
+          "line": 671
+        }
+      }
+    }
+  ],
+  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/ThoughtBursts/app/src/main/assets/index.html"
+}

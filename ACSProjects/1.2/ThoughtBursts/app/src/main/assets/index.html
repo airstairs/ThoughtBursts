@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ThoughtBursts</title>
+  <style>
+    :root {
+      --bg-overlay: rgba(15, 23, 42, 0.45);
+      --card-bg: rgba(255, 255, 255, 0.18);
+      --card-border: rgba(255, 255, 255, 0.3);
+      --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --danger: #ef4444;
+      --text: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.75);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background-color: #0f172a;
+    }
+
+    /* Wallpaper Layers */
+    .bg-layer {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: opacity 1.2s ease-in-out;
+      opacity: 0;
+      z-index: 1;
+    }
+    .bg-layer.active { opacity: 1; }
+    .overlay-tint {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%);
+      z-index: 2;
+    }
+
+    /* Fixed App Header - Safe from destruction */
+    .app-header {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: clamp(14px, 3vw, 24px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    .logo {
+      font-size: clamp(1.2rem, 4vw, 1.6rem);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+    }
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: transform 0.2s, background 0.2s;
+    }
+    .icon-btn:active { transform: scale(0.92); }
+    .icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+    /* Main Content Container */
+    .main-container {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Default Creation Button */
+    .add-burst-btn {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: #fff;
+      font-size: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .add-burst-btn:active { transform: scale(0.9); }
+
+    /* Note Card & Inner Elements */
+    .burst-card {
+      width: 100%;
+      max-width: 520px;
+      max-height: 80vh;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: clamp(18px, 4vw, 26px);
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: popIn 0.3s ease-out;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .burst-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 12px;
+    }
+    .burst-date {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .timer-badge {
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: rgba(239, 68, 68, 0.25);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-family: monospace;
+    }
+    .burst-editor {
+      width: 100%;
+      height: 220px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      resize: none;
+      user-select: text;
+      font-family: inherit;
+    }
+    .burst-editor::placeholder { color: var(--text-muted); }
+    .burst-footer {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.25);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      padding: 8px 18px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal {
+      width: 100%;
+      max-width: 400px;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal h3 { font-size: 1.2rem; font-weight: 600; }
+    .form-group { display: flex; gap: 10px; }
+    .input-number, .select-unit {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+    }
+    .input-number { flex: 1; width: 50%; text-align: center; }
+    .select-unit { flex: 1; width: 50%; color: #fff; background-color: #1e293b; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+    .btn {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-secondary { background: rgba(255, 255, 255, 0.15); color: #fff; }
+    .btn-primary { background: var(--accent); color: #fff; }
+
+    /* Destruction Physics Canvas Overlay */
+    #physicsCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      .burst-card { height: 65vh; }
+      .burst-editor { height: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Wallpaper Layers -->
+  <div id="bg1" class="bg-layer active"></div>
+  <div id="bg2" class="bg-layer"></div>
+  <div class="overlay-tint"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="logo">ThoughtBursts</div>
+    <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    </button>
+  </header>
+
+  <!-- Interactive Area -->
+  <main class="main-container">
+    <button id="addBurstBtn" class="add-burst-btn">+</button>
+
+    <div id="burstCard" class="burst-card hidden">
+      <div class="burst-header" id="headerFragment">
+        <div id="burstTitle" class="burst-date"></div>
+        <div id="burstTimer" class="timer-badge">00:00</div>
+      </div>
+      <textarea id="burstText" class="burst-editor" placeholder="Write your ephemeral thought..."></textarea>
+      <div class="burst-footer" id="footerFragment">
+        <button id="destroyBtn" class="btn-danger">Destroy Now</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Physical Destruction Canvas -->
+  <canvas id="physicsCanvas"></canvas>
+
+  <!-- Timer Setup Modal -->
+  <div id="timerModal" class="modal-backdrop">
+    <div class="modal">
+      <h3>Self-Destruct Timer</h3>
+      <div class="form-group">
+        <input type="number" id="timerVal" class="input-number" min="1" value="10">
+        <select id="timerUnit" class="select-unit">
+          <option value="1">Seconds</option>
+          <option value="60" selected>Minutes</option>
+          <option value="3600">Hours</option>
+          <option value="86400">Days</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button id="cancelTimerBtn" class="btn btn-secondary">Cancel</button>
+        <button id="startTimerBtn" class="btn btn-primary">Start Burst</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wallpaper Settings Modal -->
+  <div id="settingsModal" class="modal-backdrop">
+    <div class="modal">
+      <h3>Wallpaper Interval</h3>
+      <div class="form-group">
+        <input type="number" id="wpVal" class="input-number" min="1" value="5">
+        <select id="wpUnit" class="select-unit">
+          <option value="1">Seconds</option>
+          <option value="60" selected>Minutes</option>
+          <option value="3600">Hours</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button id="closeSettingsBtn" class="btn btn-primary">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // LocalStorage Keys
+    const STORAGE_BURST = 'tb_burst';
+    const STORAGE_SETTINGS = 'tb_settings';
+
+    let currentBgLayer = 1;
+    let wpTimer = null;
+    let burstTimer = null;
+    let isDestroying = false;
+
+    // DOM Elements
+    const bg1 = document.getElementById('bg1');
+    const bg2 = document.getElementById('bg2');
+    const addBurstBtn = document.getElementById('addBurstBtn');
+    const burstCard = document.getElementById('burstCard');
+    const burstTitle = document.getElementById('burstTitle');
+    const burstTimerEl = document.getElementById('burstTimer');
+    const burstText = document.getElementById('burstText');
+    const destroyBtn = document.getElementById('destroyBtn');
+    const headerFragment = document.getElementById('headerFragment');
+    const footerFragment = document.getElementById('footerFragment');
+    const timerModal = document.getElementById('timerModal');
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const startTimerBtn = document.getElementById('startTimerBtn');
+    const cancelTimerBtn = document.getElementById('cancelTimerBtn');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+
+    // Canvas Setup
+    const canvas = document.getElementById('physicsCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // --- Infinite Dynamic Wallpaper Engine ---
+    function changeWallpaper() {
+      // Generates a unique high-res landscape image URL on every call using a random unique seed string
+      const seed = Math.random().toString(36).substring(2, 12) + Date.now();
+      const url = `https://picsum.photos/1920/1080?sig=${seed}`;
+
+      const nextLayer = currentBgLayer === 1 ? bg2 : bg1;
+      const activeLayer = currentBgLayer === 1 ? bg1 : bg2;
+
+      const img = new Image();
+      img.src = url;
+      img.onload = () => {
+        nextLayer.style.backgroundImage = `url('${url}')`;
+        nextLayer.classList.add('active');
+        activeLayer.classList.remove('active');
+        currentBgLayer = currentBgLayer === 1 ? 2 : 1;
+      };
+      img.onerror = () => {
+        changeWallpaper();
+      };
+    }
+
+    function setupWpRotation() {
+      if (wpTimer) clearInterval(wpTimer);
+      const settings = JSON.parse(localStorage.getItem(STORAGE_SETTINGS)) || { val: 5, unit: 60 };
+      const intervalMs = settings.val * settings.unit * 1000;
+      wpTimer = setInterval(changeWallpaper, Math.max(intervalMs, 1000));
+    }
+
+    // --- Burst Note Engine ---
+    function renderBurst(burst) {
+      if (!burst) {
+        burstCard.classList.add('hidden');
+        addBurstBtn.classList.remove('hidden');
+        if (burstTimer) clearInterval(burstTimer);
+        return;
+      }
+
+      addBurstBtn.classList.add('hidden');
+      burstCard.classList.remove('hidden');
+      burstTitle.textContent = burst.title;
+      burstText.value = burst.text || '';
+
+      updateTimerDisplay(burst.expiresAt);
+      if (burstTimer) clearInterval(burstTimer);
+      burstTimer = setInterval(() => {
+        const remaining = updateTimerDisplay(burst.expiresAt);
+        if (remaining <= 0 && !isDestroying) {
+          triggerPhysicalDestruction();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay(expiresAt) {
+      const diff = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      const hrs = Math.floor(diff / 3600);
+      const mins = Math.floor((diff % 3600) / 60);
+      const secs = diff % 60;
+
+      let str = '';
+      if (hrs > 0) {
+        str = `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      } else {
+        str = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }
+      burstTimerEl.textContent = str;
+      return diff;
+    }
+
+    function createBurst(durationSeconds) {
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString(undefined, {
+        month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+
+      const burst = {
+        title: formattedDate,
+        text: '',
+        expiresAt: Date.now() + (durationSeconds * 1000)
+      };
+
+      localStorage.setItem(STORAGE_BURST, JSON.stringify(burst));
+      renderBurst(burst);
+    }
+
+    // --- Physical Physics Gravity Shatter Animation ---
+    function triggerPhysicalDestruction() {
+      if (isDestroying) return;
+      isDestroying = true;
+      if (burstTimer) clearInterval(burstTimer);
+
+      const particles = [];
+      
+      function createDebris(x, y, width, height, drawFn) {
+        return {
+          x, y, width, height,
+          vx: (Math.random() - 0.5) * 12,
+          vy: (Math.random() - 0.8) * 10 - 2,
+          gravity: 0.45 + Math.random() * 0.15,
+          rotation: 0,
+          vRot: (Math.random() - 0.5) * 0.2,
+          opacity: 1,
+          fade: 0.005 + Math.random() * 0.005,
+          drawFn
+        };
+      }
+
+      const cardRect = burstCard.getBoundingClientRect();
+      const rows = 5;
+      const cols = 5;
+      const pieceW = cardRect.width / cols;
+      const pieceH = cardRect.height / rows;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const px = cardRect.left + (c * pieceW);
+          const py = cardRect.top + (r * pieceH);
+          
+          particles.push(createDebris(px, py, pieceW, pieceH, (ctx, p) => {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, p.width, p.height, 4);
+            ctx.fill();
+            ctx.stroke();
+          }));
+        }
+      }
+
+      const headerRect = headerFragment.getBoundingClientRect();
+      particles.push(createDebris(headerRect.left, headerRect.top, headerRect.width, headerRect.height, (ctx, p) => {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 14px -apple-system, sans-serif';
+        ctx.fillText(burstTitle.textContent, 0, 14);
+
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+        ctx.beginPath();
+        ctx.roundRect(p.width - 65, 0, 60, 22, 10);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#fca5a5';
+        ctx.font = '700 12px monospace';
+        ctx.fillText('00:00', p.width - 55, 15);
+      }));
+
+      const btnRect = destroyBtn.getBoundingClientRect();
+      particles.push(createDebris(btnRect.left, btnRect.top, btnRect.width, btnRect.height, (ctx, p) => {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
+        ctx.beginPath();
+        ctx.roundRect(0, 0, p.width, p.height, 10);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#fca5a5';
+        ctx.font = '600 14px -apple-system, sans-serif';
+        ctx.fillText('Destroy Now', 12, 22);
+      }));
+
+      const editorRect = burstText.getBoundingClientRect();
+      const text = burstText.value;
+
+      if (text.trim().length > 0) {
+        const fontSize = 17;
+        const lineHeight = 25.5; 
+        const charWidth = 10;
+        let line = 0;
+        let col = 0;
+
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          if (char === '\n') {
+            line++;
+            col = 0;
+            continue;
+          }
+
+          const charX = editorRect.left + (col * charWidth);
+          const charY = editorRect.top + (line * lineHeight);
+
+          if (charX < editorRect.right && charY < editorRect.bottom && char.trim() !== '') {
+            particles.push(createDebris(charX, charY, charWidth, fontSize, (ctx, p) => {
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '17px -apple-system, Roboto, sans-serif';
+              ctx.fillText(char, 0, fontSize - 2);
+            }));
+          }
+
+          col++;
+          if (charX + charWidth >= editorRect.right - 10) {
+            line++;
+            col = 0;
+          }
+        }
+      }
+
+      burstCard.classList.add('hidden');
+      localStorage.removeItem(STORAGE_BURST);
+
+      function animatePhysics() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let activeParticles = 0;
+
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          if (p.opacity <= 0 || p.y > canvas.height + 100) continue;
+
+          activeParticles++;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.gravity;
+          p.rotation += p.vRot;
+          p.opacity = Math.max(0, p.opacity - p.fade);
+
+          ctx.save();
+          ctx.globalAlpha = p.opacity;
+          ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
+          ctx.rotate(p.rotation);
+          p.drawFn(ctx, p);
+          ctx.restore();
+        }
+
+        if (activeParticles > 0) {
+          requestAnimationFrame(animatePhysics);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          isDestroying = false;
+          renderBurst(null);
+        }
+      }
+
+      requestAnimationFrame(animatePhysics);
+    }
+
+    // --- UI Event Listeners ---
+    addBurstBtn.addEventListener('click', () => {
+      timerModal.classList.add('active');
+    });
+
+    cancelTimerBtn.addEventListener('click', () => {
+      timerModal.classList.remove('active');
+    });
+
+    startTimerBtn.addEventListener('click', () => {
+      const val = parseInt(document.getElementById('timerVal').value, 10) || 1;
+      const unit = parseInt(document.getElementById('timerUnit').value, 10) || 1;
+      timerModal.classList.remove('active');
+      createBurst(val * unit);
+    });
+
+    burstText.addEventListener('input', (e) => {
+      const burst = JSON.parse(localStorage.getItem(STORAGE_BURST));
+      if (burst) {
+        burst.text = e.target.value;
+        localStorage.setItem(STORAGE_BURST, JSON.stringify(burst));
+      }
+    });
+
+    destroyBtn.addEventListener('click', triggerPhysicalDestruction);
+
+    settingsBtn.addEventListener('click', () => {
+      const settings = JSON.parse(localStorage.getItem(STORAGE_SETTINGS)) || { val: 5, unit: 60 };
+      document.getElementById('wpVal').value = settings.val;
+      document.getElementById('wpUnit').value = settings.unit;
+      settingsModal.classList.add('active');
+    });
+
+    closeSettingsBtn.addEventListener('click', () => {
+      const val = parseInt(document.getElementById('wpVal').value, 10) || 5;
+      const unit = parseInt(document.getElementById('wpUnit').value, 10) || 1;
+      localStorage.setItem(STORAGE_SETTINGS, JSON.stringify({ val, unit }));
+      settingsModal.classList.remove('active');
+      setupWpRotation();
+    });
+
+    // --- Initialization ---
+    (function init() {
+      const savedBurst = JSON.parse(localStorage.getItem(STORAGE_BURST));
+      if (savedBurst) {
+        if (Date.now() >= savedBurst.expiresAt) {
+          localStorage.removeItem(STORAGE_BURST);
+          renderBurst(null);
+        } else {
+          renderBurst(savedBurst);
+        }
+      }
+
+      changeWallpaper();
+      setupWpRotation();
+    })();
+  </script>
+</body>
+</html>
