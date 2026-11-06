@@ -12,3 +12,13 @@ A place to write without judgement from your future self or exploding stickies i
 
 <img src="recording1.gif" style="width: 278px">  
 
+
+<hr> 
+
+
+windows now too  
+
+<img src="win.png" style="width:400px;">  
+
+
+
