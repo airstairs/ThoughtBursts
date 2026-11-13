@@ -3,6 +3,11 @@ A place to write without judgement from your future self or exploding stickies i
 
 <img src="icon.png" style="width: 38px;">  
 
-<img src="recording.gif" style="width: 278px">  
+<img src="recording.gif" style="width: 829px">    
 
-<hr>  
+
+
+
+
+<img src="recording1.gif" style="width: 278px">  
+
