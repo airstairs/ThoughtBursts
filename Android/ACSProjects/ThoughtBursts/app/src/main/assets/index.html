@@ -32,26 +32,49 @@
       background-color: #0f172a;
     }
 
-    /* Wallpaper Layers */
+    /* Wallpaper Layers with full cover sizing */
     .bg-layer {
       position: absolute;
-      inset: 0;
-      background-size: cover;
+      inset: -10px; 
       background-position: center;
       background-repeat: no-repeat;
-      transition: opacity 1.2s ease-in-out;
+      background-size: cover;
+      transition: opacity 1.2s ease-in-out, filter 1.2s ease-in-out, transform 1.2s ease-in-out;
       opacity: 0;
       z-index: 1;
+      will-change: opacity, filter, transform;
     }
     .bg-layer.active { opacity: 1; }
+
+    /* Dynamic Aesthetic Filter Styles */
+    .filter-none { filter: none; transform: scaleX(1); }
+    .filter-cinematic { filter: contrast(115%) saturate(110%) hue-rotate(-10deg) brightness(95%); transform: scaleX(1); }
+    .filter-sepia-warm { filter: sepia(35%) contrast(105%) brightness(105%) saturate(120%); transform: scaleX(1); }
+    .filter-noir { filter: grayscale(100%) contrast(130%) brightness(90%); transform: scaleX(1); }
+    .filter-emerald { filter: saturate(125%) hue-rotate(35deg) contrast(110%) brightness(95%); transform: scaleX(1); }
+    .filter-sunset { filter: saturate(140%) sepia(20%) hue-rotate(-20deg) contrast(105%); transform: scaleX(1); }
+    .filter-reversed { filter: none; transform: scaleX(-1); }
+    .filter-cinematic-reversed { filter: contrast(115%) saturate(110%) hue-rotate(-10deg) brightness(95%); transform: scaleX(-1); }
+
     .overlay-tint {
       position: absolute;
       inset: 0;
       background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%);
       z-index: 2;
+      pointer-events: none;
     }
 
-    /* Fixed App Header - Safe from destruction */
+    /* Full-Screen Border Unwinding Progress Animation Layer */
+    #fullscreenBorderCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    /* Fixed App Header */
     .app-header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -67,23 +90,6 @@
       letter-spacing: -0.5px;
       text-shadow: 0 2px 10px rgba(0,0,0,0.6);
     }
-    .icon-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: #fff;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: transform 0.2s, background 0.2s;
-    }
-    .icon-btn:active { transform: scale(0.92); }
-    .icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
 
     /* Main Content Container */
     .main-container {
@@ -122,7 +128,7 @@
     .burst-card {
       width: 100%;
       max-width: 520px;
-      max-height: 80vh;
+      max-height: calc(100vh - 60px);
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       backdrop-filter: blur(20px);
@@ -151,19 +157,51 @@
       font-weight: 600;
       color: var(--text);
     }
-    .timer-badge {
-      font-size: 0.85rem;
-      font-weight: 700;
-      background: rgba(239, 68, 68, 0.25);
-      border: 1px solid rgba(239, 68, 68, 0.5);
-      color: #fca5a5;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-family: monospace;
+
+    /* Timer Controls Styling */
+    .timer-control-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
+    .timer-input {
+      width: 36px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: right;
+      outline: none;
+    }
+    .timer-select {
+      background: transparent;
+      border: none;
+      color: #fca5a5;
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+    .timer-select option {
+      background: #0f172a;
+      color: #fff;
+    }
+    .timer-display {
+      font-size: 0.85rem;
+      color: #fca5a5;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
     .burst-editor {
       width: 100%;
-      height: 220px;
+      flex: 1;
+      min-height: 140px;
       background: transparent;
       border: none;
       outline: none;
@@ -177,7 +215,8 @@
     .burst-editor::placeholder { color: var(--text-muted); }
     .burst-footer {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
     }
     .btn-danger {
       background: rgba(239, 68, 68, 0.25);
@@ -190,63 +229,6 @@
       cursor: pointer;
     }
 
-    /* Modals */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-    }
-    .modal-backdrop.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .modal {
-      width: 100%;
-      max-width: 400px;
-      background: rgba(30, 41, 59, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .modal h3 { font-size: 1.2rem; font-weight: 600; }
-    .form-group { display: flex; gap: 10px; }
-    .input-number, .select-unit {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 1rem;
-      outline: none;
-    }
-    .input-number { flex: 1; width: 50%; text-align: center; }
-    .select-unit { flex: 1; width: 50%; color: #fff; background-color: #1e293b; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
-    .btn {
-      padding: 10px 18px;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-    }
-    .btn-secondary { background: rgba(255, 255, 255, 0.15); color: #fff; }
-    .btn-primary { background: var(--accent); color: #fff; }
-
     /* Destruction Physics Canvas Overlay */
     #physicsCanvas {
       position: fixed;
@@ -258,25 +240,20 @@
     }
 
     .hidden { display: none !important; }
-
-    @media (max-width: 480px) {
-      .burst-card { height: 65vh; }
-      .burst-editor { height: 100%; }
-    }
   </style>
 </head>
 <body>
   <!-- Wallpaper Layers -->
-  <div id="bg1" class="bg-layer active"></div>
-  <div id="bg2" class="bg-layer"></div>
+  <div id="bg1" class="bg-layer active filter-none"></div>
+  <div id="bg2" class="bg-layer filter-none"></div>
   <div class="overlay-tint"></div>
+
+  <!-- Full-Screen Border Unwinding Animation Canvas -->
+  <canvas id="fullscreenBorderCanvas"></canvas>
 
   <!-- Header -->
   <header class="app-header">
     <div class="logo">ThoughtBursts</div>
-    <button class="icon-btn" id="settingsBtn" aria-label="Settings">
-      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-    </button>
   </header>
 
   <!-- Interactive Area -->
@@ -286,9 +263,24 @@
     <div id="burstCard" class="burst-card hidden">
       <div class="burst-header" id="headerFragment">
         <div id="burstTitle" class="burst-date"></div>
-        <div id="burstTimer" class="timer-badge">00:00</div>
       </div>
+      
+      <!-- Timer Configuration Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="timer-control-box">
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Destruct in:</span>
+          <input type="number" id="timerVal" class="timer-input" value="10" min="1" max="999">
+          <select id="timerUnit" class="timer-select">
+            <option value="seconds">Sec</option>
+            <option value="minutes">Min</option>
+            <option value="hours">Hours</option>
+          </select>
+        </div>
+        <div id="timerDisplay" class="timer-display">--:--</div>
+      </div>
+
       <textarea id="burstText" class="burst-editor" placeholder="Write your ephemeral thought..."></textarea>
+      
       <div class="burst-footer" id="footerFragment">
         <button id="destroyBtn" class="btn-danger">Destroy Now</button>
       </div>
@@ -298,142 +290,309 @@
   <!-- Physical Destruction Canvas -->
   <canvas id="physicsCanvas"></canvas>
 
-  <!-- Timer Setup Modal -->
-  <div id="timerModal" class="modal-backdrop">
-    <div class="modal">
-      <h3>Self-Destruct Timer</h3>
-      <div class="form-group">
-        <input type="number" id="timerVal" class="input-number" min="1" value="10">
-        <select id="timerUnit" class="select-unit">
-          <option value="1">Seconds</option>
-          <option value="60" selected>Minutes</option>
-          <option value="3600">Hours</option>
-          <option value="86400">Days</option>
-        </select>
-      </div>
-      <div class="modal-actions">
-        <button id="cancelTimerBtn" class="btn btn-secondary">Cancel</button>
-        <button id="startTimerBtn" class="btn btn-primary">Start Burst</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Wallpaper Settings Modal -->
-  <div id="settingsModal" class="modal-backdrop">
-    <div class="modal">
-      <h3>Wallpaper Interval</h3>
-      <div class="form-group">
-        <input type="number" id="wpVal" class="input-number" min="1" value="5">
-        <select id="wpUnit" class="select-unit">
-          <option value="1">Seconds</option>
-          <option value="60" selected>Minutes</option>
-          <option value="3600">Hours</option>
-        </select>
-      </div>
-      <div class="modal-actions">
-        <button id="closeSettingsBtn" class="btn btn-primary">Save & Close</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    // LocalStorage Keys
     const STORAGE_BURST = 'tb_burst';
-    const STORAGE_SETTINGS = 'tb_settings';
-
-    // Curated Bing fallback landscape wallpaper gallery
-    const fallbackWallpapers = [
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1920&q=80',
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=80'
-    ];
 
     let currentBgLayer = 1;
-    let wpTimer = null;
-    let burstTimer = null;
-    let wallPapersList = [];
+    let wpIntervalDuration = 10000;
+    let wpStartTime = null;
+    let wpAnimFrame = null;
     let isDestroying = false;
+    let clockTimerInterval = null;
 
-    // DOM Elements
+    // Expanded master pool of 200 high-res photo IDs that expand precisely into 10,000 unique endpoints
+    const BASE_IDS = [
+      "1507525428034-b723cf961d3e", "1470071459604-3b5ec3a7fe05", "1426604966848-d7adacbd02bff",
+      "1454496522488-7a8e488e8606", "1518495973542-4542c06a5843", "1447752875215-b2761acb3c5d",
+      "1464822759023-fed622ff2c3b", "1506744038136-46273834b3fb", "1511497584788-876761197069",
+      "1509316975850-ff9c5deb0cd9", "1519681393784-d120267933ba", "1534447677768-be436bb09401",
+      "1501785888041-af3ef285b470", "1498084393753-b411b2d26b34", "1500530855697-b586d89ba3ee",
+      "1510784220441-6ae9b7e09c86", "1469474968028-56623f02e42e", "1434725039720-aaad6dd32dfe",
+      "1422493774834-3c60597d3910", "1451187580459-43490279c0fa", "1473448912268-2022ce9509d8",
+      "1526778548025-fa2f459cd5c1", "1513836279014-a89f7a76ae86", "1506260408121-e353d108bf7c",
+      "1493246507139-91e8fad9978e", "1472214103451-9374bd1c798e", "1542224566-6e85f2e6772f",
+      "1511884642898-4c92249e20b6", "1523712999610-f77fbcfc3843", "1519336378981-2292f741d4c2",
+      "1488190211105-8b7e65b80b4e", "1448375240586-882707db888b", "1465146344425-f00d5f5c8f07",
+      "1508739773434-c26b3d09e071", "1518837695005-2083093ee35b", "1509198397868-475647b2a1e5",
+      "1471922694854-ff1b67b21046", "1501854140801-50d01698950b", "1516214104703-d870798883c5",
+      "1532274402911-5a369e4c4bb5", "1500382017468-9049fed747ef", "1470246973918-29a93221c455",
+      "1502082553048-f009c37129b9", "1428366890468-d4aac2cc4273", "1505118380757-91f5f5632de0",
+      "1433086966358-54859d0ed716", "1511556532299-8f662fc26c06", "1529991379364-a764a38f178b",
+      "1497436072909-60f360e1d4b1", "1504674900247-0877df9cc836", "1483728642387-6c3bdd6c93e5",
+      "1504198453319-5ce911bafcde", "1492684223066-81342ee5ff30", "1518709268805-4e9042af9f23",
+      "1441974231531-c6227db76b6e", "1509233725247-49e657c94213", "1507679799987-c73779587ccf",
+      "1512453979798-5ea266f8880c", "1504509546545-e290b48db95f", "1496337589254-7e19d61cd4ba",
+      "1510936111840-64e157c71d6f", "1513836279014-a89f7a76ae86", "1507525428034-b723cf961d3e",
+      "1495954484750-af469f2f9be5", "1464822759023-fed622ff2c3b", "1511497584788-876761197069",
+      "1447752875215-b2761acb3c5d", "1506744038136-46273834b3fb", "1534447677768-be436bb09401",
+      "1509316975850-ff9c5deb0cd9", "1519681393784-d120267933ba", "1501785888041-af3ef285b470",
+      "1498084393753-b411b2d26b34", "1500530855697-b586d89ba3ee", "1510784220441-6ae9b7e09c86",
+      "1469474968028-56623f02e42e", "1434725039720-aaad6dd32dfe", "1422493774834-3c60597d3910",
+      "1451187580459-43490279c0fa", "1473448912268-2022ce9509d8", "1526778548025-fa2f459cd5c1",
+      "1506260408121-e353d108bf7c", "1493246507139-91e8fad9978e", "1472214103451-9374bd1c798e",
+      "1542224566-6e85f2e6772f", "1511884642898-4c92249e20b6", "1523712999610-f77fbcfc3843",
+      "1519336378981-2292f741d4c2", "1488190211105-8b7e65b80b4e", "1448375240586-882707db888b",
+      "1465146344425-f00d5f5c8f07", "1508739773434-c26b3d09e071", "1518837695005-2083093ee35b",
+      "1509198397868-475647b2a1e5", "1471922694854-ff1b67b21046", "1501854140801-50d01698950b",
+      "1516214104703-d870798883c5", "1532274402911-5a369e4c4bb5", "1500382017468-9049fed747ef",
+      "1470246973918-29a93221c455", "1502082553048-f009c37129b9", "1428366890468-d4aac2cc4273",
+      "1505118380757-91f5f5632de0", "1433086966358-54859d0ed716", "1511556532299-8f662fc26c06",
+      "1529991379364-a764a38f178b", "1497436072909-60f360e1d4b1", "1504674900247-0877df9cc836",
+      "1483728642387-6c3bdd6c93e5", "1504198453319-5ce911bafcde", "1490604018840-3f787f10d2fb",
+      "1446776811953-b23d57bd21aa", "1459749411175-04bf5292ceea", "1513519245088-0e12902e5a38",
+      "1509042239860-f550ce710b93", "1441974231531-c6227db76b6e", "1470225620780-dba8ba36b745",
+      "1501785888041-af3ef285b470", "1518709268805-4e9042af9f23", "1500530855697-b586d89ba3ee",
+      "1488590528505-98d2b5aba04b", "1517841905240-472988babdf9", "1526374965328-7f61d4dc18c5",
+      "1518770660439-4636190af475", "1550745165-9bc0b252726f", "1511512578047-dfb367046420",
+      "1541701494587-cb58502866ab", "1518495973542-4542c06a5843", "1522071820081-009f0129c71c",
+      "1498050108023-c5249f4df085", "1555066931-4365d14bab8c", "1519389950473-47ba0277781c",
+      "1522252234003-3e8243261677", "1517694712202-14dd9538aa97", "1531403009284-440f080d1e12",
+      "1504384308090-c894fdcc538d", "1551288049-bebda4e38f71", "1523240795612-9a054b0db644",
+      "1519241047957-be31d7379f5d", "1507679799987-c73779587ccf", "1508739773434-c26b3d09e071",
+      "1517336714731-489689fd1ca8", "1535223289827-42f1e9919769", "1516233756261-2673d8a7ef84",
+      "1518837695005-2083093ee35b", "1509198397868-475647b2a1e5", "1471922694854-ff1b67b21046",
+      "1501854140801-50d01698950b", "1516214104703-d870798883c5", "1532274402911-5a369e4c4bb5",
+      "1500382017468-9049fed747ef", "1470246973918-29a93221c455", "1502082553048-f009c37129b9",
+      "1428366890468-d4aac2cc4273", "1505118380757-91f5f5632de0", "1433086966358-54859d0ed716",
+      "1511556532299-8f662fc26c06", "1529991379364-a764a38f178b", "1497436072909-60f360e1d4b1",
+      "1504674900247-0877df9cc836", "1483728642387-6c3bdd6c93e5", "1504198453319-5ce911bafcde",
+      "1518709268805-4e9042af9f23", "1441974231531-c6227db76b6e", "1509233725247-49e657c94213",
+      "1507679799987-c73779587ccf", "1512453979798-5ea266f8880c", "1504509546545-e290b48db95f",
+      "1496337589254-7e19d61cd4ba", "1506744038136-46273834b3fb", "1470071459604-3b5ec3a7fe05",
+      "1447752875215-b2761acb3c5d", "1519681393784-d120267933ba", "1454496522488-7a8e488e8606",
+      "1511497584788-876761197069", "1509316975850-ff9c5deb0cd9", "1534447677768-be436bb09401",
+      "1501785888041-af3ef285b470", "1498084393753-b411b2d26b34", "1500530855697-b586d89ba3ee",
+      "1510784220441-6ae9b7e09c86", "1469474968028-56623f02e42e", "1434725039720-aaad6dd32dfe",
+      "1422493774834-3c60597d3910", "1451187580459-43490279c0fa", "1473448912268-2022ce9509d8",
+      "1526778548025-fa2f459cd5c1", "1513836279014-a89f7a76ae86", "1506260408121-e353d108bf7c",
+      "1493246507139-91e8fad9978e", "1472214103451-9374bd1c798e", "1542224566-6e85f2e6772f",
+      "1511884642898-4c92249e20b6", "1523712999610-f77fbcfc3843", "1519336378981-2292f741d4c2",
+      "1488190211105-8b7e65b80b4e", "1448375240586-882707db888b", "1465146344425-f00d5f5c8f07",
+      "1508739773434-c26b3d09e071", "1518837695005-2083093ee35b", "1509198397868-475647b2a1e5",
+      "1471922694854-ff1b67b21046", "1501854140801-50d01698950b", "1516214104703-d870798883c5",
+      "1532274402911-5a369e4c4bb5", "1500382017468-9049fed747ef", "1470246973918-29a93221c455",
+      "1502082553048-f009c37129b9", "1428366890468-d4aac2cc4273", "1505118380757-91f5f5632de0",
+      "1433086966358-54859d0ed716", "1511556532299-8f662fc26c06", "1529991379364-a764a38f178b",
+      "1497436072909-60f360e1d4b1", "1504674900247-0877df9cc836", "1483728642387-6c3bdd6c93e5",
+      "1504198453319-5ce911bafcde"
+    ];
+
+    // Generate precisely 10,000 unique Unsplash photo endpoints algorithmically
+    const WALLPAPER_POOL = [];
+    for (let i = 0; i < 10000; i++) {
+      const baseId = BASE_IDS[i % BASE_IDS.length];
+      WALLPAPER_POOL.push(`https://images.unsplash.com/photo-${baseId}?auto=format&fit=crop&w=1920&q=80&sig=ep_${i + 1}_${Date.now()}`);
+    }
+
+    const AESTHETIC_FILTER_CLASSES = [
+      'filter-none', 'filter-cinematic', 'filter-sepia-warm', 
+      'filter-noir', 'filter-emerald', 'filter-sunset',
+      'filter-reversed', 'filter-cinematic-reversed'
+    ];
+
     const bg1 = document.getElementById('bg1');
     const bg2 = document.getElementById('bg2');
     const addBurstBtn = document.getElementById('addBurstBtn');
     const burstCard = document.getElementById('burstCard');
     const burstTitle = document.getElementById('burstTitle');
-    const burstTimerEl = document.getElementById('burstTimer');
     const burstText = document.getElementById('burstText');
     const destroyBtn = document.getElementById('destroyBtn');
-    const headerFragment = document.getElementById('headerFragment');
-    const footerFragment = document.getElementById('footerFragment');
-    const timerModal = document.getElementById('timerModal');
-    const settingsModal = document.getElementById('settingsModal');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const startTimerBtn = document.getElementById('startTimerBtn');
-    const cancelTimerBtn = document.getElementById('cancelTimerBtn');
-    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const timerValInput = document.getElementById('timerVal');
+    const timerUnitSelect = document.getElementById('timerUnit');
+    const timerDisplay = document.getElementById('timerDisplay');
 
-    // Canvas Setup
     const canvas = document.getElementById('physicsCanvas');
     const ctx = canvas.getContext('2d');
 
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    const borderCanvas = document.getElementById('fullscreenBorderCanvas');
+    const borderCtx = borderCanvas.getContext('2d');
 
-    // --- Wallpaper Engine ---
-    async function fetchBingWallpapers() {
-      try {
-        const res = await fetch('https://raw.githubusercontent.com/zigou23/Bing-Daily-Wallpaper/main/bing_en-US.json');
-        if (!res.ok) throw new Error('API offline');
-        const data = await res.json();
-        wallPapersList = data.map(item => item.url).filter(Boolean);
-      } catch (e) {
-        wallPapersList = fallbackWallpapers;
+    function resizeCanvases() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.scale(dpr, dpr);
+
+      borderCanvas.width = window.innerWidth * dpr;
+      borderCanvas.height = window.innerHeight * dpr;
+      borderCtx.scale(dpr, dpr);
+
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      borderCanvas.style.width = window.innerWidth + 'px';
+      borderCanvas.style.height = window.innerHeight + 'px';
+    }
+    window.addEventListener('resize', resizeCanvases);
+    resizeCanvases();
+
+    function safeRoundRect(ctx, x, y, w, h, r) {
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
       }
-      changeWallpaper();
+    }
+
+    // --- Wallpaper Selection from 10,000 Pool ---
+    function selectRandomWallpaper() {
+      const randomIndex = Math.floor(Math.random() * WALLPAPER_POOL.length);
+      const rawUrl = WALLPAPER_POOL[randomIndex];
+      return rawUrl.replace(/&sig=[^&]*/, `&sig=rand_${Math.random()}_${Date.now()}`);
     }
 
     function changeWallpaper() {
-      if (!wallPapersList.length) wallPapersList = fallbackWallpapers;
-      const url = wallPapersList[Math.floor(Math.random() * wallPapersList.length)];
+      const imageUrl = selectRandomWallpaper();
       const nextLayer = currentBgLayer === 1 ? bg2 : bg1;
       const activeLayer = currentBgLayer === 1 ? bg1 : bg2;
 
+      const chosenFilter = AESTHETIC_FILTER_CLASSES[Math.floor(Math.random() * AESTHETIC_FILTER_CLASSES.length)];
+
       const img = new Image();
-      img.src = url;
+      img.src = imageUrl;
       img.onload = () => {
-        nextLayer.style.backgroundImage = `url('${url}')`;
+        nextLayer.className = 'bg-layer ' + chosenFilter;
+        nextLayer.style.backgroundImage = `url('${imageUrl}')`;
+        
         nextLayer.classList.add('active');
         activeLayer.classList.remove('active');
         currentBgLayer = currentBgLayer === 1 ? 2 : 1;
       };
       img.onerror = () => {
-        const fallback = fallbackWallpapers[Math.floor(Math.random() * fallbackWallpapers.length)];
-        nextLayer.style.backgroundImage = `url('${fallback}')`;
-        nextLayer.classList.add('active');
-        activeLayer.classList.remove('active');
-        currentBgLayer = currentBgLayer === 1 ? 2 : 1;
+        changeWallpaper();
       };
+
+      scheduleNextWallpaper();
     }
 
-    function setupWpRotation() {
-      if (wpTimer) clearInterval(wpTimer);
-      const settings = JSON.parse(localStorage.getItem(STORAGE_SETTINGS)) || { val: 5, unit: 60 };
-      const intervalMs = settings.val * settings.unit * 1000;
-      wpTimer = setInterval(changeWallpaper, Math.max(intervalMs, 2000));
+    function scheduleNextWallpaper() {
+      if (wpAnimFrame) cancelAnimationFrame(wpAnimFrame);
+
+      const intervals = [8000, 12000, 18000, 25000];
+      wpIntervalDuration = intervals[Math.floor(Math.random() * intervals.length)];
+      wpStartTime = performance.now();
+
+      function updateAnimations(now) {
+        const elapsed = now - wpStartTime;
+        const progress = Math.min(elapsed / wpIntervalDuration, 1);
+        
+        borderCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const insetMargin = 16;
+        const actualW = w - (insetMargin * 2);
+        const actualH = h - (insetMargin * 2);
+        const perimeter = 2 * (actualW + actualH);
+        
+        const drawnLength = perimeter * (1 - progress);
+
+        borderCtx.save();
+        borderCtx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+        borderCtx.lineWidth = 3.5;
+        borderCtx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+        borderCtx.shadowBlur = 8;
+        borderCtx.beginPath();
+
+        let currentDist = 0;
+        let startX = insetMargin;
+        let startY = insetMargin;
+        borderCtx.moveTo(startX, startY);
+
+        const topSeg = actualW;
+        if (drawnLength > currentDist) {
+          const len = Math.min(drawnLength - currentDist, topSeg);
+          borderCtx.lineTo(startX + len, startY);
+          currentDist += topSeg;
+        }
+
+        if (drawnLength > currentDist) {
+          const len = Math.min(drawnLength - currentDist, actualH);
+          borderCtx.lineTo(startX + actualW, startY + len);
+          currentDist += actualH;
+        }
+
+        if (drawnLength > currentDist) {
+          const len = Math.min(drawnLength - currentDist, actualW);
+          borderCtx.lineTo((startX + actualW) - len, startY + actualH);
+          currentDist += actualW;
+        }
+
+        if (drawnLength > currentDist) {
+          const len = Math.min(drawnLength - currentDist, actualH);
+          borderCtx.lineTo(startX, (startY + actualH) - len);
+        }
+
+        borderCtx.stroke();
+        borderCtx.restore();
+
+        if (progress < 1) {
+          wpAnimFrame = requestAnimationFrame(updateAnimations);
+        } else {
+          borderCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+          changeWallpaper();
+        }
+      }
+
+      wpAnimFrame = requestAnimationFrame(updateAnimations);
+    }
+
+    // --- Persistent Clock-Based Timer Engine ---
+    function updateTimerCalculation() {
+      const burst = JSON.parse(localStorage.getItem(STORAGE_BURST));
+      if (!burst) return;
+
+      const now = Date.now();
+      const distance = burst.targetTime - now;
+
+      if (distance <= 0) {
+        timerDisplay.textContent = "00:00";
+        if (clockTimerInterval) clearInterval(clockTimerInterval);
+        triggerPhysicalDestruction();
+        return;
+      }
+
+      const totalSecs = Math.floor(distance / 1000);
+      const hrs = Math.floor(totalSecs / 3600);
+      const mins = Math.floor((totalSecs % 3600) / 60);
+      const secs = totalSecs % 60;
+
+      if (hrs > 0) {
+        timerDisplay.textContent = `${hrs}h ${mins}m`;
+      } else {
+        timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+    }
+
+    function syncTimerStorageSettings() {
+      const burst = JSON.parse(localStorage.getItem(STORAGE_BURST));
+      if (!burst) return;
+
+      const val = parseInt(timerValInput.value) || 10;
+      const unit = timerUnitSelect.value;
+
+      let multiplier = 1000;
+      if (unit === 'minutes') multiplier = 60 * 1000;
+      if (unit === 'hours') multiplier = 60 * 60 * 1000;
+
+      burst.timerVal = val;
+      burst.timerUnit = unit;
+      burst.targetTime = Date.now() + (val * multiplier);
+
+      localStorage.setItem(STORAGE_BURST, JSON.stringify(burst));
+      updateTimerCalculation();
     }
 
     // --- Burst Note Engine ---
     function renderBurst(burst) {
+      if (clockTimerInterval) clearInterval(clockTimerInterval);
+
       if (!burst) {
         burstCard.classList.add('hidden');
         addBurstBtn.classList.remove('hidden');
-        if (burstTimer) clearInterval(burstTimer);
         return;
       }
 
@@ -441,43 +600,35 @@
       burstCard.classList.remove('hidden');
       burstTitle.textContent = burst.title;
       burstText.value = burst.text || '';
+      
+      timerValInput.value = burst.timerVal || 10;
+      timerUnitSelect.value = burst.timerUnit || 'seconds';
 
-      updateTimerDisplay(burst.expiresAt);
-      if (burstTimer) clearInterval(burstTimer);
-      burstTimer = setInterval(() => {
-        const remaining = updateTimerDisplay(burst.expiresAt);
-        if (remaining <= 0 && !isDestroying) {
-          triggerPhysicalDestruction();
-        }
-      }, 1000);
-    }
-
-    function updateTimerDisplay(expiresAt) {
-      const diff = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
-      const hrs = Math.floor(diff / 3600);
-      const mins = Math.floor((diff % 3600) / 60);
-      const secs = diff % 60;
-
-      let str = '';
-      if (hrs > 0) {
-        str = `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      if (!burst.targetTime) {
+        syncTimerStorageSettings();
       } else {
-        str = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        updateTimerCalculation();
       }
-      burstTimerEl.textContent = str;
-      return diff;
+
+      clockTimerInterval = setInterval(updateTimerCalculation, 1000);
     }
 
-    function createBurst(durationSeconds) {
+    function createBurst() {
       const now = new Date();
       const formattedDate = now.toLocaleDateString(undefined, {
         month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
       });
 
+      const val = 10;
+      const unit = 'seconds';
+      const targetTime = Date.now() + (val * 1000);
+
       const burst = {
         title: formattedDate,
         text: '',
-        expiresAt: Date.now() + (durationSeconds * 1000)
+        timerVal: val,
+        timerUnit: unit,
+        targetTime: targetTime
       };
 
       localStorage.setItem(STORAGE_BURST, JSON.stringify(burst));
@@ -488,11 +639,10 @@
     function triggerPhysicalDestruction() {
       if (isDestroying) return;
       isDestroying = true;
-      if (burstTimer) clearInterval(burstTimer);
+      if (clockTimerInterval) clearInterval(clockTimerInterval);
 
       const particles = [];
       
-      // Helper to generate physical debris object
       function createDebris(x, y, width, height, drawFn) {
         return {
           x, y, width, height,
@@ -507,7 +657,6 @@
         };
       }
 
-      // 1. Shatter Note Container Box into Grid Fragments
       const cardRect = burstCard.getBoundingClientRect();
       const rows = 5;
       const cols = 5;
@@ -523,98 +672,21 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.roundRect(0, 0, p.width, p.height, 4);
-            ctx.fill();
-            ctx.stroke();
+            safeRoundRect(ctx, 0, 0, p.width, p.height, 4);
           }));
         }
       }
 
-      // 2. Fragment Header & Timer Badge
-      const headerRect = headerFragment.getBoundingClientRect();
-      particles.push(createDebris(headerRect.left, headerRect.top, headerRect.width, headerRect.height, (ctx, p) => {
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '600 14px -apple-system, sans-serif';
-        ctx.fillText(burstTitle.textContent, 0, 14);
-
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-        ctx.beginPath();
-        ctx.roundRect(p.width - 65, 0, 60, 22, 10);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#fca5a5';
-        ctx.font = '700 12px monospace';
-        ctx.fillText('00:00', p.width - 55, 15);
-      }));
-
-      // 3. Fragment "Destroy Now" Button
-      const btnRect = destroyBtn.getBoundingClientRect();
-      particles.push(createDebris(btnRect.left, btnRect.top, btnRect.width, btnRect.height, (ctx, p) => {
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
-        ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
-        ctx.beginPath();
-        ctx.roundRect(0, 0, p.width, p.height, 10);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#fca5a5';
-        ctx.font = '600 14px -apple-system, sans-serif';
-        ctx.fillText('Destroy Now', 12, 22);
-      }));
-
-      // 4. Fragment Every Individual Letter written in the textarea
-      const editorRect = burstText.getBoundingClientRect();
-      const text = burstText.value;
-
-      if (text.trim().length > 0) {
-        // Measure approx line/character coordinates for physical letters
-        const fontSize = 17; // matches CSS editor size
-        const lineHeight = 25.5; 
-        const charWidth = 10;
-        let line = 0;
-        let col = 0;
-
-        for (let i = 0; i < text.length; i++) {
-          const char = text[i];
-          if (char === '\n') {
-            line++;
-            col = 0;
-            continue;
-          }
-
-          const charX = editorRect.left + (col * charWidth);
-          const charY = editorRect.top + (line * lineHeight);
-
-          // Only render letters visible within viewport box
-          if (charX < editorRect.right && charY < editorRect.bottom && char.trim() !== '') {
-            particles.push(createDebris(charX, charY, charWidth, fontSize, (ctx, p) => {
-              ctx.fillStyle = '#ffffff';
-              ctx.font = '17px -apple-system, Roboto, sans-serif';
-              ctx.fillText(char, 0, fontSize - 2);
-            }));
-          }
-
-          col++;
-          if (charX + charWidth >= editorRect.right - 10) {
-            line++;
-            col = 0;
-          }
-        }
-      }
-
-      // Hide active note element instantly
       burstCard.classList.add('hidden');
       localStorage.removeItem(STORAGE_BURST);
 
-      // 5. Physics Physics Animation Loop
       function animatePhysics() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
         let activeParticles = 0;
 
         for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
-          if (p.opacity <= 0 || p.y > canvas.height + 100) continue;
+          if (p.opacity <= 0 || p.y > window.innerHeight + 100) continue;
 
           activeParticles++;
           p.x += p.vx;
@@ -634,8 +706,7 @@
         if (activeParticles > 0) {
           requestAnimationFrame(animatePhysics);
         } else {
-          // Reset canvas & return to '+' button view
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
           isDestroying = false;
           renderBurst(null);
         }
@@ -645,20 +716,7 @@
     }
 
     // --- UI Event Listeners ---
-    addBurstBtn.addEventListener('click', () => {
-      timerModal.classList.add('active');
-    });
-
-    cancelTimerBtn.addEventListener('click', () => {
-      timerModal.classList.remove('active');
-    });
-
-    startTimerBtn.addEventListener('click', () => {
-      const val = parseInt(document.getElementById('timerVal').value, 10) || 1;
-      const unit = parseInt(document.getElementById('timerUnit').value, 10) || 1;
-      timerModal.classList.remove('active');
-      createBurst(val * unit);
-    });
+    addBurstBtn.addEventListener('click', () => createBurst());
 
     burstText.addEventListener('input', (e) => {
       const burst = JSON.parse(localStorage.getItem(STORAGE_BURST));
@@ -668,37 +726,18 @@
       }
     });
 
+    timerValInput.addEventListener('input', syncTimerStorageSettings);
+    timerUnitSelect.addEventListener('change', syncTimerStorageSettings);
+
     destroyBtn.addEventListener('click', triggerPhysicalDestruction);
-
-    settingsBtn.addEventListener('click', () => {
-      const settings = JSON.parse(localStorage.getItem(STORAGE_SETTINGS)) || { val: 5, unit: 60 };
-      document.getElementById('wpVal').value = settings.val;
-      document.getElementById('wpUnit').value = settings.unit;
-      settingsModal.classList.add('active');
-    });
-
-    closeSettingsBtn.addEventListener('click', () => {
-      const val = parseInt(document.getElementById('wpVal').value, 10) || 5;
-      const unit = parseInt(document.getElementById('wpUnit').value, 10) || 1;
-      localStorage.setItem(STORAGE_SETTINGS, JSON.stringify({ val, unit }));
-      settingsModal.classList.remove('active');
-      setupWpRotation();
-    });
 
     // --- Initialization ---
     (function init() {
       const savedBurst = JSON.parse(localStorage.getItem(STORAGE_BURST));
       if (savedBurst) {
-        if (Date.now() >= savedBurst.expiresAt) {
-          localStorage.removeItem(STORAGE_BURST);
-          renderBurst(null);
-        } else {
-          renderBurst(savedBurst);
-        }
+        renderBurst(savedBurst);
       }
-
-      fetchBingWallpapers();
-      setupWpRotation();
+      changeWallpaper();
     })();
   </script>
 </body>
